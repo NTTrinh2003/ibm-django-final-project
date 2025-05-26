@@ -109,7 +109,7 @@ def submit(request, course_id):
     enrollment = Enrollment.objects.get(user=user, course=course)
     submission = Submission.objects.create(enrollment=enrollment)
     choices = extract_answers(request)
-    submission.choice.set(choices)
+    submission.choices.set(choices)
     submission_id = submission.id
     return HttpResponseRedirect(reverse(viewname='onlinecourse:exam_result', args=(course_id, submission_id,)))
 
@@ -127,7 +127,7 @@ def extract_answers(request):
 # <HINT> Create an exam result view to check if learner passed exam and show their question results and result for each question,
 def show_exam_result(request, course_id, submission_id):
     context={}
-    course = Course.objects.get(course_id=course_id)
+    course = get_object_or_404(Course, pk=course_id)
     submission = Submission.objects.get(id=submission_id)
     choices = submission.choices.all()
 
@@ -137,10 +137,10 @@ def show_exam_result(request, course_id, submission_id):
     for question in questions:
         correct_choices = question.choice_set.filter(is_correct=True)
         selected_choices = choices.filter(question=question)
-        if correct_choices == selected_choices:
+        if set(correct_choices) == set(selected_choices):
             total_score += question.grade
     
-    context['course'] = Course
+    context['course'] = course
     context['grade'] = total_score
     context['choices'] = choices
 
